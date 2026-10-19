@@ -1,3 +1,4 @@
+   CREATE EXTENSION IF NOT EXISTS pg_trgm;
 -- Database schema for NL Supermarkt MCP
 
 CREATE TABLE IF NOT EXISTS supermarkets (
