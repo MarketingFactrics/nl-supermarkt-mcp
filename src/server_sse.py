@@ -18,28 +18,25 @@ def main():
     import uvicorn
     from mcp.server.sse import SseServerTransport
     from starlette.applications import Starlette
-    from starlette.routing import Route
-    from starlette.responses import JSONResponse
+    from starlette.routing import Route, Mount
+    from starlette.responses import JSONResponse, Response
     from starlette.requests import Request
 
-    sse = SseServerTransport("/messages")
+    sse = SseServerTransport("/messages/")
 
     async def handle_sse(request: Request):
         logger.info("SSE connection received")
         async with sse.connect_sse(request.scope, request.receive, request._send) as streams:
             await server.run(streams[0], streams[1], server.create_initialization_options())
-
-    async def handle_messages(request: Request):
-        await sse.handle_post_message(request.scope, request.receive, request._send)
-        return JSONResponse({"status": "ok"})
+        return Response()
 
     async def health(request: Request):
         return JSONResponse({"status": "healthy"})
 
     app = Starlette(
         routes=[
-            Route("/sse", endpoint=handle_sse),
-            Route("/messages", endpoint=handle_messages, methods=["POST"]),
+            Route("/sse", endpoint=handle_sse, methods=["GET"]),
+            Mount("/messages/", app=sse.handle_post_message),
             Route("/health", endpoint=health),
         ]
     )
